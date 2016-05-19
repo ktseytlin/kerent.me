@@ -1,21 +1,29 @@
 ---
 layout: post
-title:  "Intro to Terraform Modules"
+title:  "Basics of Terraform Modules"
 date:   2016-04-22 09:00:00
 categories: blog
 ---
 
-# An Introduction to Terraform Modules
+Goal: To provide information as to why Terraform modules are useful and how to setup/run them.
 
-Goal: To provide information as to why Terraform modules are important and explain how to setup/run.
-
-### What is Terraform?
+*What is Terraform?*
 
 Terraform is analogous to CloudFormation - it launches infrastructure. Based off my experience, I personally like Terraform more (and I find the capabilities of modules to be extremely powerful), but to each their own. Additionally, CloudFormation is exclusive to AWS whereas Terraform is compatible with multiple cloud providers.
 
-### Why Terraform Modules?
+For example, let's create an AWS EC2 instance. By looking at the documentation we see a resource called an "aws_instance". When declaring it you set the first name equal to the name of the resource you are using and the second name to whatever you want to call it. The Terraform documentation for that resource will tell you which of the variables are necessary and which ones are optional. You will need to fill in all the necessary variables which legit values in order for Terraform to execute.
 
-Terraform Modules allow us to have cleaner code within our repository. Rather than maintaining all the Terraform scripts, we can just call the Terraform and pass the application variables.
+```
+resource "aws_instance" "example_creating_ec2"{
+  name = "  "
+  .
+  .
+}
+```
+
+*Why Terraform Modules?*
+
+Terraform Modules allow us to have cleaner code within our repository. Rather than maintaining all the Terraform scripts, we can just call the Terraform and pass the application variables. Based on the example above: I can create a module for creating EC2 instances and now I won't have to copy and paste that resource a bazillion times, but rather I'll just pass in different variables on each run (if they are different than the defaults I set).
 
 At the end of the day, in AWS you are just constructing the same things over and over - EC2's, ELB's, ASG's, etc., and the only thing that differs between them is the configuration and variables. Instead, you can build out one module (for example, creating an EC2 instance) and then call the module and feed in those configuration variables.
 
@@ -23,7 +31,7 @@ Essentially, what we are building out is a skeleton that allows your to pass par
 
 Modules allow for **high reuseability** which means that you don't have to keep writing the same thing over and over. That sounds pretty awesome to me.
 
-### Downloading Terraform
+*Downloading Terraform*
 
 If you are working on a Mac, then you can use brew to download (if you don't have brew installed, I highly suggest you do so as it will make your life significantly easier).
 ```
@@ -32,19 +40,20 @@ brew install terraform
 
 All you PC users, [check out this link for installation.] (https://www.terraform.io/intro/getting-started/install.html)
 
-### Terraform Module Structure
+*Terraform Module Structure*
 
 Below are the files usually within a module:
 
 * main.tf - This is the meat of your module. It is where you declare your module resources/providers/provisioners/etc.
 * variables.tf - This outlines what variables are used in main.tf. However, you don't define the values of the variables here, although you can put in a default value. The variables here will be defined when the module is called.
 * outputs.tf - Think of this as what you want the module to return to you. Could be an IP address, a name, etc.
+* userdata.sh - This file is useful if you want to configure the resource - you will need to pass in the name of the userdata script as a value to main.tf. Not all resources can have this file (i.e. ELBs).
 
-I would recommend separating each module into it's own repository, rather than it's own folder with a repository. This will allow you to tag each module differently and make it easier for contribution to occur for each specific module.
+I would recommend separating each module into it's own repository, rather than it's own folder with a repository. This will allow you to tag each module differently and make it easier for contribution to occur independently for each specific module.
 
-In most resource types, there is a variable called "user_data". This variable is where you can pass through the location of bash scripts for the machine to execute. If you are working with Chef, recall that Capital One uses Chef bootstrap, all that is is a line of code that you can put in your bash script - you *do not need to create a Chef provisioner for your resources*. I have not testing the modules out yet with Ansible - more info on this later.
+In most resource types, there is a variable called "user_data". This variable is where you can pass through the location of bash scripts for the machine to execute. You can use the user data file to kick off Chef and Ansible!
 
-### Using a Module
+###### Using a Module
 
 Now that we have a basic handle on how things work, let's use a module and be super cool and build out machines - with minimal effort! This may be confusing at first but stick around for the ride because your life should get easier in the long term.
 
@@ -53,22 +62,21 @@ There are two ways to execute a module:
 1. From the command line and passing in the parameters using `-var`
 2. From another Terraform file that calls in the modules and specifies the parameters
 
-Please note, that the two tactics below focus on using aws secret keys and access keys.
-
+Please note, that the two tactics below focus on using AWS secret keys and access keys. These should be somewhat easy to obtain and generate but some large companies may make it a bit harder to obtain.
 
 #### First Way: Calling the Module from the Command Line
 
 If you're at work, you'll likely need to set up your proxy!
 
-Now that you've set up the proxy, let's git clone a repository. For this example, let's git clone [this module] (https://github.kdc.capitalone.com/Athena/tfmodules-kafka).
+Now that you've set up the proxy, let's git clone a repository. For this example, let's git clone [this module] (https://github.com/terraform-community-modules/tf_aws_ec2_instance).
 
 ```
-git clone https://github.kdc.capitalone.com/Athena/tfmodules-kafka.git
+git clone https://github.com/terraform-community-modules/tf_aws_ec2_instance.git
 git checkout master
 git pull
 ```
 
-In order to run the terraform commands, you need to run it from the directory that your module is in. First, we will use Terraform plan and then we will use Terraform apply.
+In order to run the Terraform commands, you need to run it from the directory that your module is in. First, we will use Terraform plan and then we will use Terraform apply.
 
 We use Terraform plan to test run the module and see what will be created. This is incredibly useful. Plus if there are errors in your modules you will get error messages here, and then you will be able to resolve them. In the tfmodules-kafka that we cloned, I have put default values for everything except the aws access and secret keys -- never hard code these values are defaults, you never want to hardcode your passwords.
 ```
