@@ -9,9 +9,9 @@ Goal: To provide information as to why Terraform modules are useful and how to s
 
 *What is Terraform?*
 
-##### Terraform is analogous to CloudFormation - it launches infrastructure. Based off my experience, I personally like Terraform more (and I find the capabilities of modules to be extremely powerful), but to each their own. Additionally, CloudFormation is exclusive to AWS whereas Terraform is compatible with multiple cloud providers.
+##### Terraform is analogous to CloudFormation - it launches infrastructure. Based off my experience, I personally like Terraform more (and I find the capabilities of modules to be extremely powerful), but to each their own. Additionally, CloudFormation is exclusive to AWS whereas Terraform is compatible with multiple cloud providers. If you are deciding between CloudFormation and Terraform, Terraform will make your life a bit easier (especially if you build in a sane fashion, but I'm obviously a bit biased).
 
-##### For example, let's create an AWS EC2 instance. By looking at the documentation we see a resource called an "aws_instance". When declaring it you set the first name equal to the name of the resource you are using and the second name to whatever you want to call it. The Terraform documentation for that resource will tell you which of the variables are necessary and which ones are optional. You will need to fill in all the necessary variables which legit values in order for Terraform to execute.
+##### For example, let's create an AWS EC2 instance. By looking at the documentation we see a resource called an "aws_instance". When declaring it you set the first name equal to the name of the resource you are using and the second name to whatever you want to call it. The Terraform documentation for that resource will tell you which of the variables are necessary and which ones are optional. You will need to fill in all the necessary variables which legit values in order for Terraform to execute - documentation is key for this step.
 
 ```
 resource "aws_instance" "example_creating_ec2"{
@@ -23,7 +23,7 @@ resource "aws_instance" "example_creating_ec2"{
 
 *Why Terraform Modules?*
 
-##### Terraform Modules allow us to have cleaner code within our repository. Rather than maintaining all the Terraform scripts, we can just call the Terraform and pass the application variables. Based on the example above: I can create a module for creating EC2 instances and now I won't have to copy and paste that resource a bazillion times, but rather I'll just pass in different variables on each run (if they are different than the defaults I set).
+##### Terraform Modules allow us to have cleaner code within our repository. Rather than maintaining all the Terraform scripts, we can just create a configuration file that calls (or reuses) different modules and passes the application variables. Based on the example above: I can create a module for creating EC2 instances and now I won't have to copy and paste that resource a bazillion times, but rather I'll just pass in different variables on each run (if they are different than the defaults I set).
 
 ##### At the end of the day, in AWS you are just constructing the same things over and over - EC2's, ELB's, ASG's, etc., and the only thing that differs between them is the configuration and variables. Instead, you can build out one module (for example, creating an EC2 instance) and then call the module and feed in those configuration variables.
 
@@ -52,7 +52,7 @@ brew install terraform
 
 ##### I would recommend separating each module into it's own repository, rather than it's own folder with a repository. This will allow you to tag each module differently and make it easier for contribution to occur independently for each specific module.
 
-#####In most resource types, there is a variable called "user_data". This variable is where you can pass through the location of bash scripts for the machine to execute. You can use the user data file to kick off Chef and Ansible!
+#####In most resource types, there is a variable called "user_data". This variable is where you can pass through the location of bash scripts for the machine to execute. You can use the user data file to kick off Chef and Ansible! And for those of you already thinking ahead, you can pass variables into your Terraform that can be used in user data script. Doing that will allow you to build logic that will, for example, pass variables into what Ansible play to execute.
 
 *Using a Module*
 
@@ -63,7 +63,7 @@ brew install terraform
 1. From the command line and passing in the parameters using `-var`
 2. From another Terraform file that calls in the modules and specifies the parameters
 
-##### Please note, that the two tactics below focus on using AWS secret keys and access keys. These should be somewhat easy to obtain and generate but some large companies may make it a bit harder to obtain.
+##### Please note, that the two tactics below focus on using AWS secret keys and access keys.
 
 *First Way: Calling the Module from the Command Line*
 
@@ -150,6 +150,7 @@ module "kafka" {
 * Due to the restrictiveness of VPN, if you are working on Terraform Modules over VPN you will likely encounter issues (even if you've set up your proxy). This might not actually be because of you, but rather because of VPN.
 * **Do not nest modules.** It seems like an awesome idea and really cool, however, this is bad practice. You will likely end up breaking things.
 * Can create graphical ways to view the module interaction. Check out Terraform documentation for more info on this.
+* There is the possibility for a race condition to emerge. Also use the graph capability of Terraform - if your graph looks like a circle you may need to rethink a bit.
 
 *Good Links to Read:*
 
